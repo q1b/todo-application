@@ -17,6 +17,7 @@ import { unwrap } from "solid-js/store";
 import { Share } from "@/components/Share";
 import { TodoItem } from "@/components/TodoItem";
 import { API } from "@/api/api";
+import { useNavigate } from "solid-app-router";
 
 const Default: Component = () => {
 	const [width, setWidth] = createSignal(0);
@@ -35,6 +36,8 @@ const Default: Component = () => {
 		const todoGroup = await API.TodoGroup.getAll();
 		console.log(todoGroup?.data);
 	})();
+
+	const navigate = useNavigate();
 	return (
 		<>
 			<h2
@@ -86,18 +89,18 @@ const Default: Component = () => {
 						{(todo, i) => {
 							return (
 								<TodoItem
-                                    onCheck={() => {
-                                        setCompleted({ id: todo.id });
-                                    }}
-                                    onUnCheck={() => {
-                                        setInCompleted({ id: todo.id });
-                                    }}
-                                    onDelete={() => {
-                                        deleteTodo({ id: todo.id });
-                                    }}
-                                    isChecked={todo.done}
-                                    label={todo.label}
-							    />								
+									onCheck={() => {
+										setCompleted({ id: todo.id });
+									}}
+									onUnCheck={() => {
+										setInCompleted({ id: todo.id });
+									}}
+									onDelete={() => {
+										deleteTodo({ id: todo.id });
+									}}
+									isChecked={todo.done}
+									label={todo.label}
+								/>
 							);
 						}}
 					</For>
@@ -108,9 +111,11 @@ const Default: Component = () => {
 					dirty={dirty()}
 					onShareStart={() => {
 						console.log("Request Is Sended ");
+						setDirty(false);
 					}}
-					onShareComplete={() => {
-						console.log("Request Is Completed");
+					onShareComplete={(path) => {
+						console.log("Request Is Completed", path);
+						navigate("." + path);
 					}}
 					type="Default"
 					initial_id=""

@@ -1,11 +1,11 @@
-import { baseURL } from "@/api/api";
+import { API, baseURL } from "@/api/api";
 import { createEffect, onCleanup, Show } from "solid-js";
 import { createStore } from "solid-js/store";
 
 export function Share(props: {
 	initial_id: string;
 	onShareStart: () => any;
-	onShareComplete: () => any;
+	onShareComplete: (path: string) => any;
 	dirty: boolean;
 	type: "Default" | "Shared";
 	body: any;
@@ -34,24 +34,13 @@ export function Share(props: {
 			let current = true;
 			if (store.state === "loading") {
 				if (props.onShareStart) props.onShareStart();
-				window
-					.fetch(`${baseURL}/todo_group`, {
-						method: "POST",
-						headers: {
-							"content-type": "application/json",
-						},
-						body: JSON.stringify(props.body),
-					})
-					.then((res) => {
-						if (!res.ok) throw res;
-						return res;
-					})
-					.then((res) => res.json())
+				API.TodoGroup.add(props.body)
 					.then((res) => {
 						if (current) {
-							console.log("RES", res);
-							const newPath = `/${res.id}`;
-							if (props.onShareComplete) props.onShareComplete();
+							console.log("RES", res.data);
+							const newPath = `/${res.data.id}`;
+							if (props.onShareComplete)
+								props.onShareComplete(newPath);
 							navigator.clipboard
 								.writeText(window.location.origin + newPath)
 								.then(() => {
@@ -120,7 +109,6 @@ export function Share(props: {
 		}
 		//   [state, path, editorRef, onShareStart, onShareComplete, tailwindVersion]
 	);
-
 	return (
 		<div class="hidden sm:flex items-center space-x-4 min-w-0">
 			<button
@@ -214,40 +202,44 @@ export function Share(props: {
 					{store.errorText}
 				</p>
 			</Show>
-			{(store.state === "copied" || store.state === "disabled") &&
-				store.path && (
-					<button
-						type="button"
-						class="flex-auto min-w-0 flex items-center space-x-2 text-sm leading-6 font-semibold text-gray-500 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white"
-						title={`http://localhost:3000/${store.path}`}
-						onClick={() => {
-							navigator.clipboard
-								.writeText(window.location.origin + store.path)
-								.then(() => {
-									setStore((currentState) => ({
-										...currentState,
-										state: "copied",
-									}));
-								});
-						}}
+			<Show
+				when={
+					(store.state === "copied" || store.state === "disabled") &&
+					store.path
+				}
+			>
+				<button
+					type="button"
+					class="flex-auto min-w-0 flex items-center space-x-2 text-sm leading-6 font-semibold text-gray-500 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white"
+					title={`http://localhost:3000/${store.path}`}
+					onClick={() => {
+						navigator.clipboard
+							.writeText(window.location.origin + store.path)
+							.then(() => {
+								setStore((currentState) => ({
+									...currentState,
+									state: "copied",
+								}));
+							});
+					}}
+				>
+					<svg
+						width="26"
+						height="22"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="2"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+						class="flex-none text-gray-300 dark:text-gray-500"
+						aria-hidden="true"
 					>
-						<svg
-							width="26"
-							height="22"
-							fill="none"
-							stroke="currentColor"
-							stroke-width="2"
-							stroke-linecap="round"
-							stroke-linejoin="round"
-							class="flex-none text-gray-300 dark:text-gray-500"
-							aria-hidden="true"
-						>
-							<path d="M14.652 12c1.885-1.844 1.75-4.548-.136-6.392l-1.275-1.225c-1.885-1.844-4.942-1.844-6.827 0a4.647 4.647 0 0 0 0 6.676l.29.274" />
-							<path d="M11.348 10c-1.885 1.844-1.75 4.549.136 6.392l1.275 1.225c1.885 1.844 4.942 1.844 6.827 0a4.647 4.647 0 0 0 0-6.676l-.29-.274" />
-						</svg>
-						<span class="truncate">...{store.path}</span>
-					</button>
-				)}
+						<path d="M14.652 12c1.885-1.844 1.75-4.548-.136-6.392l-1.275-1.225c-1.885-1.844-4.942-1.844-6.827 0a4.647 4.647 0 0 0 0 6.676l.29.274" />
+						<path d="M11.348 10c-1.885 1.844-1.75 4.549.136 6.392l1.275 1.225c1.885 1.844 4.942 1.844 6.827 0a4.647 4.647 0 0 0 0-6.676l-.29-.274" />
+					</svg>
+					<span class="truncate">...{store.path}</span>
+				</button>
+			</Show>
 		</div>
 	);
 }

@@ -3,7 +3,7 @@
 	"version": "0.0.0",
 	"description": "",
 	"scripts": {
-		"dev": "vite",
+		"dev": "vite --port 3001",
 		"build": "vite build",
 		"build:icon": "node ./scripts/icons/index.js",
 		"serve": "vite preview"

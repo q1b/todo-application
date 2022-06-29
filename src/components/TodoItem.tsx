@@ -14,14 +14,15 @@ export const TodoItem = (props: {
 }) => {
 	const [clicks, setClicks] = createSignal(0);
 	const [editing, setEditing] = createSignal(false);
+	console.log(props.label, props.isChecked);
 	return (
 		<div class="flex items-center gap-x-2 w-full">
 			<Show
-				when={!props.isChecked}
+				when={props.isChecked}
 				fallback={
 					<button
 						onClick={() => {
-							if (props.onUnCheck) props.onUnCheck();
+							if (props.onCheck) props.onCheck();
 						}}
 						class="group rounded-md"
 					>
@@ -34,7 +35,7 @@ export const TodoItem = (props: {
 			>
 				<button
 					onClick={() => {
-						if (props.onCheck) props.onCheck();
+						if (props.onUnCheck) props.onUnCheck();
 					}}
 					class="group rounded-md"
 				>
@@ -66,8 +67,8 @@ export const TodoItem = (props: {
 			/> */}
 			<button
 				classList={{
-					"bg-gray-200 text-slate-900": props.isChecked,
-					"bg-green-400 text-teal-900": !props.isChecked,
+					"bg-gray-200 text-slate-900": !props.isChecked,
+					"bg-green-400 text-teal-900": props.isChecked,
 				}}
 				class="transition-color group flex font-semibold flex-wrap items-center w-full rounded-lg px-2 py-1.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500 dark:focus-visible:ring-2 dark:focus-visible:ring-green-200"
 				onClick={() => {
