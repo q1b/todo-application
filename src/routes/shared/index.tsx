@@ -6,6 +6,8 @@ import {
 	createSignal,
 	For,
 	on,
+	Switch,
+	Match,
 } from "solid-js";
 
 import {
@@ -21,6 +23,7 @@ import {
 	setTodoGroup,
 	todoGroup,
 	setInCompleted,
+	updateLabel,
 } from "./store";
 
 import { CheckBoxCircleIcon, LoadingIcon, TrashIcon } from "@/assets/icons";
@@ -43,14 +46,13 @@ const Shared: Component = () => {
 
 	console.log(id);
 
-	const [data, { refetch: refetchTodoGroup }] = createResource(
+	const [settledData, { refetch: refetch }] = createResource(
 		id,
-		async (id: string) => API.TodoGroup.get({ id })
-	);
-
-	const [todosData, { refetch: refetchTodos }] = createResource(
-		id,
-		async (id: string) => API.TodoGroup.getTodos({ id: id })
+		async (id: string) =>
+			await Promise.allSettled([
+				API.TodoGroup.get({ id }),
+				API.Todos.getAll({ group_id: id }),
+			])
 	);
 
 	const updateHeadingAsync = debounce((heading: string) => {
@@ -62,28 +64,56 @@ const Shared: Component = () => {
 				})
 		);
 		console.log("Sending Request");
-	}, 250);
+	}, 420);
+
+	const updateTodoLabelAsync = debounce((id: string, label: string) => {
+		addToLoadingArr(
+			async () =>
+				await API.Todos.updateLabel({
+					id,
+					label,
+				})
+		);
+		console.log("Updating the Label Backend");
+	}, 540);
 
 	createEffect(() => {
-		if (!data.loading)
-			if (data().data?.label) {
-				setTodoGroup("id", data().data.id);
-				setHeading(data().data.label);
+		if (!settledData.loading) {
+			const [todo_group_res, todos_res] = settledData();
+			if (todo_group_res.status === "fulfilled") {
+				if (todo_group_res.value.data) {
+					if (todo_group_res.value.data?.label) {
+						setTodoGroup("id", todo_group_res.value.data.id);
+						setHeading(todo_group_res.value.data.label);
+					}
+				} else console.log("No Heading DATA");
 			}
-	});
-
-	createEffect(() => {
-		if (!todosData.loading)
-			if (todosData().data) {
-				setTodoGroup("todos", todosData().data);
+			if (todos_res.status === "fulfilled") {
+				if (todos_res.value.data)
+					setTodoGroup("todos", todos_res.value.data);
 			}
+		}
 	});
 
 	return (
 		<>
-			<Show when={loadingArr.length !== 0}>
-				<LoadingIcon class="w-8 h-8 dark:text-white absolute top-3 right-24" />
-			</Show>
+			<div class="absolute top-3 right-24">
+				<Switch>
+					<Match when={loadingArr.includes("error")}>
+						<div class="text-xl px-2 py-1 rounded-md bg-red-400/75 dark:bg-rose-600/10 text-white">
+							Failed !
+						</div>
+					</Match>
+					<Match when={loadingArr.length !== 0}>
+						<div class="relative">
+							<LoadingIcon class="w-8 h-8 dark:text-white" />
+							<span class="absolute top-1 left-3">
+								{loadingArr.length}
+							</span>
+						</div>
+					</Match>
+				</Switch>
+			</div>
 			<h2
 				ref={(el) => (dimRef = el)}
 				class="absolute invisible h-auto w-auto text-5xl sm:text-6xl md:text-7xl font-bold"
@@ -130,7 +160,7 @@ const Shared: Component = () => {
 				</form>
 				<div class="mt-4 items-center flex w-full max-w-[596px] flex-col gap-y-6">
 					<Show
-						when={!todosData.loading}
+						when={!settledData.loading}
 						fallback={
 							<LoadingIcon class="w-18 h-18 dark:text-white text-slate-700" />
 						}
@@ -140,6 +170,16 @@ const Shared: Component = () => {
 								{(todo, i) => {
 									return (
 										<TodoItem
+											onInput={(v) => {
+												updateLabel({
+													todo_id: todo.id,
+													value: v,
+												});
+												updateTodoLabelAsync(
+													todo.id,
+													v
+												);
+											}}
 											onCheck={() => {
 												setCompleted({ id: todo.id });
 											}}

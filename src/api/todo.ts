@@ -2,8 +2,12 @@ import { Todo } from "./api.type";
 import axiosApi from "./api";
 import { AxiosPromise, AxiosResponse } from "axios";
 
-const getAll = async (): Promise<AxiosResponse<Todo[]>> =>
-	await axiosApi.get("/todos");
+const getAll = async ({
+	group_id,
+}: {
+	group_id: string;
+}): Promise<AxiosResponse<Todo[]>> =>
+	await axiosApi.get(`/todos?group_id=${group_id}`);
 
 const get = async ({ id }: { id: string }): Promise<AxiosResponse<Todo>> =>
 	await axiosApi.get(`/todos?id=${id}`);

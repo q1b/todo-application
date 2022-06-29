@@ -8,12 +8,11 @@ import { children, createSignal, FlowProps, Show } from "solid-js";
 export const TodoItem = (props: {
 	label: string;
 	onCheck: () => void;
+	onInput: (value: string) => void;
 	isChecked: boolean;
 	onUnCheck: () => void;
 	onDelete: () => void;
 }) => {
-	const [clicks, setClicks] = createSignal(0);
-	const [editing, setEditing] = createSignal(false);
 	console.log(props.label, props.isChecked);
 	return (
 		<div class="flex items-center gap-x-2 w-full">
@@ -45,27 +44,29 @@ export const TodoItem = (props: {
 					/>
 				</button>
 			</Show>
-			{/* <input
+			<input
 				type="text"
 				name="todoItem"
 				id="todoItem"
 				classList={{
 					"bg-gray-200 text-slate-900 focus-visible:text-white focus-visible:bg-black dark:focus-visible:text-black dark:focus-visible:bg-white":
-						props.isChecked,
-					"bg-green-400 text-teal-900 focus-visible:text-green-200 focus-visible:bg-teal-700":
 						!props.isChecked,
+					"bg-green-400 text-teal-900 focus-visible:text-green-200 focus-visible:bg-teal-700":
+						props.isChecked,
 				}}
 				class="transition-color group flex font-semibold flex-wrap items-center w-full rounded-lg px-2 py-1.5 focus:outline-none"
 				value={props.label}
+				onInput={(e) =>
+					props.onInput ? props.onInput(e.currentTarget.value) : null
+				}
 				onFocus={(e) => {
 					e.preventDefault();
 					e.currentTarget.selectionStart =
 						e.currentTarget.value.length;
 					e.currentTarget.selectionEnd = e.currentTarget.value.length;
-					console.log(e.currentTarget.selectionEnd);
 				}}
-			/> */}
-			<button
+			/>
+			{/* <button
 				classList={{
 					"bg-gray-200 text-slate-900": !props.isChecked,
 					"bg-green-400 text-teal-900": props.isChecked,
@@ -83,7 +84,7 @@ export const TodoItem = (props: {
 				}}
 			>
 				{props.label}
-			</button>
+			</button> */}
 			<button
 				onClick={() => {
 					if (props.onDelete) props.onDelete();

@@ -7,14 +7,36 @@ export const [loadingArr, setLoadingArr] = createStore([]);
 
 export const addToLoadingArr = async (callback: () => any) => {
 	const uid = createUniqueId();
+	let failed = false;
 	if (callback) {
 		setLoadingArr(loadingArr.length, uid);
-		await callback();
+		try {
+			await callback();
+		} catch (error) {
+			failed = true;
+			console.log(error);
+		}
+
+		if (failed) {
+			try {
+				await callback();
+			} catch (error) {
+				setLoadingArr(loadingArr.length, "error");
+				setTimeout(() => {
+					const index = loadingArr.findIndex((v) => v === "error");
+					setLoadingArr([
+						...loadingArr.slice(0, index),
+						...loadingArr.slice(index + 1),
+					]);
+				}, 400);
+			}
+		}
 		const index = loadingArr.findIndex((v) => v === uid);
-		setLoadingArr([
-			...loadingArr.slice(0, index),
-			...loadingArr.slice(index + 1),
-		]);
+		if (index !== -1)
+			setLoadingArr([
+				...loadingArr.slice(0, index),
+				...loadingArr.slice(index + 1),
+			]);
 	}
 };
 
