@@ -1,6 +1,7 @@
 import { TodoGroup } from "@/api/api.type";
 import { batch, createEffect, createSignal, createUniqueId } from "solid-js";
 import { createStore, SetStoreFunction, Store } from "solid-js/store";
+import { updateHeight } from "@/App"
 
 export const [store, setStore] = createLocalStore<TodoGroup>({
 	name: "todolist",
@@ -16,9 +17,7 @@ export const [input, setInput] = createSignal("");
 
 export const heading = () => store.label;
 
-export const setHeading = (heading: string) => {
-	setStore("label", heading);
-};
+export const setHeading = (heading: string) => setStore("label", heading);
 
 export const addTodo = (e: SubmitEvent) => {
 	e.preventDefault();
@@ -63,17 +62,20 @@ export const deleteTodo = ({ id }: { id: string }) =>
 	setStore("todos", (t) => removeItem(t, id));
 
 function createLocalStore<T>({
-	name,
-	init,
+    name,
+    init,
 }: {
-	name: string;
-	init: T;
+    name: string;
+    init: T;
 }): [Store<T>, SetStoreFunction<T>] {
-	const localStore = localStorage.getItem(name);
-	const [state, setState] = createStore<T>(
-		localStore ? JSON.parse(localStore) : init
-	);
-	createEffect(() => localStorage.setItem(name, JSON.stringify(state)));
+    const localStore = localStorage.getItem(name);
+    const [state, setState] = createStore<T>(
+        localStore ? JSON.parse(localStore) : init
+    );
+    createEffect(() => {
+        updateHeight();
+        localStorage.setItem(name, JSON.stringify(state));
+    });
 	return [state, setState];
 }
 

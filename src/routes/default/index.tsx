@@ -1,5 +1,6 @@
-import { Component, createEffect, createSignal, For, on } from "solid-js";
+import { Component, createEffect, createMemo, createSignal, createUniqueId, For, on } from "solid-js";
 import { debounce } from "@solid-primitives/scheduled";
+import { ImportDialogButton } from "@/components/importDialog"
 
 import {
 	addTodo,
@@ -10,14 +11,16 @@ import {
 	setHeading,
 	setInCompleted,
 	setInput,
-	store,
+    store,
+    setStore
 } from "./store";
 
-import { unwrap } from "solid-js/store";
+import { produce, unwrap } from "solid-js/store";
 import { Share } from "@/components/Share";
 import { TodoItem } from "@/components/TodoItem";
 import { API } from "@/api/api";
 import { useNavigate } from "solid-app-router";
+import { TodoGroup } from "@/api/api.type";
 
 const Default: Component = () => {
 	const [width, setWidth] = createSignal(0);
@@ -32,20 +35,38 @@ const Default: Component = () => {
 	const trigger = debounce((heading: string) => console.log(heading), 500);
 
 	const [dirty, setDirty] = createSignal(false);
+
 	(async () => {
 		const todoGroup = await API.TodoGroup.getAll();
 		console.log(todoGroup?.data);
 	})();
 
 	const navigate = useNavigate();
+    const [getList,setList] = createSignal<string[]>([])
+
+    createEffect(on(getList, (list) => {
+        setStore(produce((todoGroup) => {
+            if(todoGroup)
+            list.forEach((item) => {
+                // @ts-ignore
+                todoGroup.todos.push({
+                        label: item,
+                        done: false,
+                        id: createUniqueId(),
+                    })
+            })
+        }))
+    }))
+    const totalItems = createMemo(() => store.todos.length)
 	return (
 		<>
+            <ImportDialogButton listSetter={setList} />
 			<h2
 				ref={(el) => (dimRef = el)}
 				class="absolute invisible h-auto w-auto text-5xl sm:text-6xl md:text-7xl font-bold"
 			>
 				{heading()}
-			</h2>
+            </h2>
 			<input
 				type="text"
 				name="heading"
@@ -63,10 +84,11 @@ const Default: Component = () => {
 				}}
 				value={heading()}
 				class="pb-1 selection:bg-slate-600/10 caret-Sea-400 focus:outline-none bg-transparent text-5xl sm:text-6xl md:text-7xl font-bold bg-gradient-to-br from-cyan-300 via-sky-400 to-blue-500 bg-clip-text text-transparent"
-			/>
-			<article class="w-full px-6 sm:px-8 md:px-10 flex flex-col gap-y-6 place-items-center">
+            />
+			<article class="w-full px-6 sm:px-8 md:px-10 flex flex-col gap-y-4 place-items-center">
+                <div class="flex flex-col w-full max-w-lg items-start">
 				<form
-					class="w-full group gap-x-3 flex items-center max-w-lg justify-center"
+					class="w-full group gap-x-3 flex items-center justify-center"
 					onSubmit={(e) => addTodo(e)}
 					// use:enhance={{result:processNewTodosResult}}
 				>
@@ -83,8 +105,17 @@ const Default: Component = () => {
 					{/* <button class="group">
 							<AddIcon class="w-7 h-7" basic />
 						</button> */}
-				</form>
-				<div class="mt-4 items-center flex w-full max-w-[596px] flex-col gap-y-6">
+                </form>
+                <div class="flex items-center ml-1 mt-2 gap-x-3">
+                    <div class="text-sm text-slate-900 dark:text-white">
+                      <span class="text-yellow-400"> Total Items </span> = { totalItems() }
+                    </div>
+                    <div class="text-sm text-slate-900 dark:text-white">
+                      <span class="text-teal-400"> Completed Items </span> = { store.todos.filter((todo) => todo.done).length }
+                    </div>
+                </div>
+                </div>
+				<div class="items-center flex w-full max-w-[596px] flex-col gap-y-6">
 					<For each={store.todos}>
 						{(todo, i) => {
 							return (

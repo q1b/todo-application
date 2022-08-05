@@ -1,5 +1,6 @@
 import { API } from "@/api/api";
 import { TodoGroup } from "@/api/api.type";
+import { updateHeight } from "@/App";
 import { batch, createEffect, createSignal, createUniqueId } from "solid-js";
 import { createStore, SetStoreFunction, Store } from "solid-js/store";
 
@@ -138,7 +139,10 @@ function createLocalStore<T>({
 	const [state, setState] = createStore<T>(
 		localStore ? JSON.parse(localStore) : init
 	);
-	createEffect(() => localStorage.setItem(name, JSON.stringify(state)));
+    createEffect(() => {
+        updateHeight()
+        localStorage.setItem(name, JSON.stringify(state)) 
+    });
 	return [state, setState];
 }
 

@@ -8,6 +8,7 @@ import {
 	on,
 	Switch,
 	Match,
+    createMemo,
 } from "solid-js";
 
 import {
@@ -93,8 +94,9 @@ const Shared: Component = () => {
 					setTodoGroup("todos", todos_res.value.data);
 			}
 		}
-	});
-
+    });
+    const totalItems = createMemo(() => todoGroup.todos.length);
+    const completedItems = createMemo(() => todoGroup.todos.filter((e) => e.done).length)
 	return (
 		<>
 			<div class="absolute top-3 right-24">
@@ -136,11 +138,12 @@ const Shared: Component = () => {
 					width: `${width()}px`,
 				}}
 				value={heading()}
-				class="pb-1 selection:bg-slate-600/10 caret-Sea-400 focus:outline-none bg-transparent text-5xl sm:text-6xl md:text-7xl font-bold bg-gradient-to-br from-cyan-300 via-sky-400 to-blue-500 bg-clip-text text-transparent"
+				class="selection:bg-slate-600/10 caret-Sea-400 focus:outline-none bg-transparent text-5xl sm:text-6xl md:text-7xl font-bold bg-gradient-to-br from-cyan-300 via-sky-400 to-blue-500 bg-clip-text text-transparent"
 			/>
-			<article class="w-full px-6 sm:px-8 md:px-10 flex flex-col gap-y-6 place-items-center">
+			<article class="w-full px-6 sm:px-8 md:px-10 flex flex-col place-items-center">
+                <div class="flex flex-col w-full max-w-lg items-start">
 				<form
-					class="w-full group gap-x-3 flex items-center max-w-lg justify-center"
+					class="w-full group gap-x-3 flex items-center justify-center"
 					onSubmit={(e) => addTodo(e)}
 					// use:enhance={{result:processNewTodosResult}}
 				>
@@ -157,8 +160,17 @@ const Shared: Component = () => {
 					{/* <button class="group">
 							<AddIcon class="w-7 h-7" basic />
 						</button> */}
-				</form>
-				<div class="mt-4 items-center flex w-full max-w-[596px] flex-col gap-y-6">
+                    </form>
+                     <div class="flex items-center ml-1 mt-2 gap-x-3">
+                    <div class="text-sm text-slate-900 dark:text-white">
+                      <span class="text-yellow-400"> Total Items </span> = { totalItems() }
+                    </div>
+                    <div class="text-sm text-slate-900 dark:text-white">
+                      <span class="text-teal-400"> Completed Items </span> = { todoGroup.todos.filter((todo) => todo.done).length }
+                    </div>
+                </div>
+                </div>
+				<div class="items-center flex w-full max-w-[596px] flex-col gap-y-6">
 					<Show
 						when={!settledData.loading}
 						fallback={

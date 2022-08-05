@@ -5,7 +5,7 @@ import axios from "axios";
 export const baseURL = import.meta.env.VITE_API_URL;
 
 const axiosApi = axios.create({
-	baseURL,
+    baseURL,
 });
 
 // // Request interceptor for API calls
@@ -40,6 +40,6 @@ const axiosApi = axios.create({
 export default axiosApi;
 
 export const API = {
-	Todos,
-	TodoGroup,
+    Todos,
+    TodoGroup,
 };
